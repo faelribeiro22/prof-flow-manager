@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Calendar, Users, LogOut, Settings, Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface HeaderProps {
   user?: {
@@ -27,6 +28,7 @@ export const Header = ({ user, onLogout }: HeaderProps) => {
         </div>
 
         <div className="flex items-center space-x-4">
+          <ThemeToggle />
           {user && (
             <>
               <div className="flex items-center space-x-2">

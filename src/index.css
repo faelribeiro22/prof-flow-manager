@@ -48,6 +48,61 @@
     --status-free-foreground: 0 0% 98%;
     --status-occupied: 38 92% 50%;
     --status-occupied-foreground: 0 0% 98%;
+    
+    /* Border and input */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 215 25% 15%;
+  }
+  
+  .dark {
+    /* Base colors */
+    --background: 215 28% 12%;
+    --foreground: 210 20% 98%;
+
+    /* Card system */
+    --card: 215 25% 15%;
+    --card-foreground: 210 20% 98%;
+
+    /* Popover */
+    --popover: 215 25% 15%;
+    --popover-foreground: 210 20% 98%;
+
+    /* Primary - Professional Blue */
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 98%;
+    --primary-hover: 217 91% 65%;
+
+    /* Secondary - Neutral Gray */
+    --secondary: 215 25% 25%;
+    --secondary-foreground: 210 20% 98%;
+
+    /* Muted tones */
+    --muted: 215 25% 20%;
+    --muted-foreground: 210 20% 80%;
+
+    /* Accent */
+    --accent: 215 25% 25%;
+    --accent-foreground: 210 20% 98%;
+    
+    /* Border and input */
+    --border: 215 25% 25%;
+    --input: 215 25% 25%;
+    --ring: 210 20% 80%;
+    
+    /* Status colors */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Schedule status colors */
+    --status-free: 142 76% 36%;
+    --status-free-foreground: 0 0% 98%;
+    --status-occupied: 38 92% 50%;
+    --status-occupied-foreground: 0 0% 98%;
     --status-unavailable: 0 0% 64%;
     --status-unavailable-foreground: 0 0% 98%;
 
