@@ -48,7 +48,7 @@ const mockBestTeachers: SpecialListEntry[] = [
   }
 ];
 
-export const SpecialListsView = ({}: SpecialListsViewProps) => {
+export const SpecialListsView = (props: SpecialListsViewProps) => {
   const { toast } = useToast();
   const [restrictedTeachers, setRestrictedTeachers] = useState<SpecialListEntry[]>(mockRestrictedTeachers);
   const [bestTeachers, setBestTeachers] = useState<SpecialListEntry[]>(mockBestTeachers);

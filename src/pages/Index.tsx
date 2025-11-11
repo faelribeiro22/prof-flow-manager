@@ -1,55 +1,50 @@
 import { useState } from "react";
 import { Dashboard } from "@/components/Dashboard/Dashboard";
 import { LoginForm } from "@/components/Auth/LoginForm";
-
-// Definir tipo User
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'teacher';
-  phone: string;
-  level: string;
-  hasCertification: boolean;
-};
-
-// Usuários mockados para demonstração
-const mockUsers: Record<string, User> = {
-  'admin@escola.com': {
-    id: '1',
-    name: 'Ana Silva',
-    email: 'admin@escola.com',
-    role: 'admin',
-    phone: '(11) 99999-1111',
-    level: 'Sênior',
-    hasCertification: true
-  },
-  'professor@escola.com': {
-    id: '2',
-    name: 'Carlos Santos',
-    email: 'professor@escola.com',
-    role: 'teacher',
-    phone: '(11) 99999-2222',
-    level: 'Pleno',
-    hasCertification: false
-  }
-};
+import { RegisterForm } from "@/components/Auth/RegisterForm";
+import { useAuth } from "@/components/Auth/AuthContext";
 
 const Index = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, role, loading } = useAuth();
+  const [showRegister, setShowRegister] = useState(false);
 
-  const handleLogin = (credentials: { email: string; password: string; role: 'admin' | 'teacher' }) => {
-    const userData = mockUsers[credentials.email];
-    if (userData) {
-      setUser(userData);
-    }
-  };
-
-  if (!user) {
-    return <LoginForm onLogin={handleLogin} />;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
-  return <Dashboard user={user} />;
+  if (!user) {
+    if (showRegister) {
+      return (
+        <RegisterForm 
+          onSuccess={() => setShowRegister(false)} 
+          onBackToLogin={() => setShowRegister(false)} 
+        />
+      );
+    }
+    
+    return (
+      <LoginForm 
+        onSuccess={() => {}} 
+      />
+    );
+  }
+
+  // Criar um objeto de usuário compatível com o Dashboard
+  const dashboardUser = {
+    id: user.id,
+    name: user.email.split('@')[0], // Temporário até termos o nome real
+    email: user.email,
+    role: role || 'teacher',
+    phone: '',
+    level: 'Iniciante',
+    hasCertification: false
+  };
+
+  return <Dashboard user={dashboardUser} />;
 };
 
 export default Index;

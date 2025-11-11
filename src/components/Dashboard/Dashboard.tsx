@@ -7,6 +7,7 @@ import { SearchView } from "./SearchView";
 import { ProfileView } from "./ProfileView";
 import { SpecialListsView } from "./SpecialListsView";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/components/Auth/AuthContext";
 
 interface DashboardProps {
   user: {
@@ -23,10 +24,16 @@ interface DashboardProps {
 export const Dashboard = ({ user }: DashboardProps) => {
   const [activeTab, setActiveTab] = useState('schedule');
   const isMobile = useIsMobile();
+  const { signOut } = useAuth();
 
-  const handleLogout = () => {
-    // Implementar logout
-    console.log('Logout');
+  const handleLogout = async () => {
+    console.log('Dashboard: handleLogout chamado');
+    try {
+      await signOut();
+      console.log('Dashboard: signOut concluído');
+    } catch (error) {
+      console.error('Dashboard: Erro ao fazer logout:', error);
+    }
   };
 
   const renderContent = () => {

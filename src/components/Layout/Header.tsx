@@ -1,8 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Calendar, Users, LogOut, Settings, Menu } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Calendar, LogOut, Settings } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface HeaderProps {
   user?: {
@@ -13,7 +17,6 @@ interface HeaderProps {
 }
 
 export const Header = ({ user, onLogout }: HeaderProps) => {
-  const isMobile = useIsMobile();
   return (
     <header className="border-b bg-card shadow-custom-sm">
       <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4">
@@ -45,13 +48,28 @@ export const Header = ({ user, onLogout }: HeaderProps) => {
                 </div>
               </div>
 
-              <Button variant="ghost" size="sm">
-                <Settings className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Configurações</p>
+                </TooltipContent>
+              </Tooltip>
 
-              <Button variant="ghost" size="sm" onClick={onLogout}>
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={onLogout}>
+                    <LogOut className="h-4 w-4" />
+                    <span className="ml-2 hidden lg:inline">Sair</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Fazer logout</p>
+                </TooltipContent>
+              </Tooltip>
             </>
           )}
         </div>

@@ -6,68 +6,61 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, LogIn } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { signIn } from "@/integrations/supabase/auth";
+import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 interface LoginFormProps {
-  onLogin: (credentials: { email: string; password: string; role: 'admin' | 'teacher' }) => void;
+  onSuccess: () => void;
 }
 
-export const LoginForm = ({ onLogin }: LoginFormProps) => {
+export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const [credentials, setCredentials] = useState({
     email: '',
     password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
+  const { toast } = useToast();
 
-  // Usuários demo para teste
-  const demoUsers = [
-    {
-      email: 'admin@escola.com',
-      password: 'admin123',
-      role: 'admin' as const,
-      name: 'Ana Silva',
-      label: 'Administrador'
-    },
-    {
-      email: 'professor@escola.com',
-      password: 'prof123',
-      role: 'teacher' as const,
-      name: 'Carlos Santos',
-      label: 'Professor'
-    }
-  ];
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    // Simular autenticação
-    setTimeout(() => {
-      const user = demoUsers.find(
-        u => u.email === credentials.email && u.password === credentials.password
-      );
-
-      if (user) {
-        onLogin({
-          email: user.email,
-          password: credentials.password,
-          role: user.role
+    
+    try {
+      const { data, error } = await signIn({
+        email: credentials.email,
+        password: credentials.password
+      });
+      
+      if (error) {
+        toast({
+          title: "Erro ao fazer login",
+          description: error.message,
+          variant: "destructive"
         });
-      } else {
-        alert('Credenciais inválidas');
+        return;
       }
+      
+      if (data.user) {
+        toast({
+          title: "Login realizado com sucesso",
+          description: "Bem-vindo de volta!",
+        });
+        onSuccess();
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao fazer login",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
-  const handleDemoLogin = (user: typeof demoUsers[0]) => {
-    setCredentials({ email: user.email, password: user.password });
-    onLogin({
-      email: user.email,
-      password: user.password,
-      role: user.role
-    });
-  };
+  // Função de login demo removida pois não é mais necessária
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -118,40 +111,17 @@ export const LoginForm = ({ onLogin }: LoginFormProps) => {
               </Button>
             </form>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">
-                  Ou use uma conta demo
-                </span>
-              </div>
-            </div>
-
             <div className="space-y-2">
-              <p className="text-sm text-center text-muted-foreground">Ou faça login com uma conta demo:</p>
-              <div className={`${isMobile ? 'flex flex-col space-y-2' : 'flex space-x-2'}`}>
-                {demoUsers.map(user => (
-                  <Button
-                    key={user.email}
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => handleDemoLogin(user)}
-                  >
-                    {user.label}
-                    <Badge variant="secondary" className="ml-2">{user.role === 'admin' ? 'Admin' : 'Prof'}</Badge>
-                  </Button>
-                ))}
-              </div>
+              <p className="text-xs text-center text-muted-foreground mt-2">
+                Não tem uma conta? <Link to="/register" className="text-primary hover:underline">Cadastre-se</Link>
+              </p>
             </div>
           </CardContent>
         </Card>
 
         <div className="text-center">
           <p className="text-xs text-muted-foreground">
-            Para conectar autenticação real, configure o Supabase
+            Autenticação implementada com Supabase
           </p>
         </div>
       </div>
