@@ -6,8 +6,11 @@
 erDiagram
     AUTH_USERS ||--|| PROFILES : tem
     AUTH_USERS ||--o| TEACHERS : pode_ser
+    TEACHERS ||--o| TEACHER_ADDRESSES : possui
     TEACHERS ||--o{ SCHEDULES : possui
     TEACHERS ||--o{ SPECIAL_LISTS : possui
+    TEACHERS ||--o{ TEACHER_LESSON_TYPES : possui
+    LESSON_TYPES ||--o{ TEACHER_LESSON_TYPES : possui
 
     AUTH_USERS {
         uuid id PK
@@ -30,10 +33,41 @@ erDiagram
         string name
         string email UK
         string phone
-        enum level "iniciante, intermediario, avancado"
+        enum level "iniciante, intermediario, avancado, nativo"
         boolean has_international_certification
+        enum performance "ruim, regular, bom, excelente"
+        text academic_background
         timestamp created_at
         timestamp updated_at
+    }
+
+    TEACHER_ADDRESSES {
+        uuid id PK
+        uuid teacher_id FK,UK
+        string cep
+        string street
+        string number
+        string complement
+        string neighborhood
+        string city
+        string state
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    LESSON_TYPES {
+        uuid id PK
+        string name UK
+        text description
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    TEACHER_LESSON_TYPES {
+        uuid id PK
+        uuid teacher_id FK
+        uuid lesson_type_id FK
+        timestamp created_at
     }
 
     SCHEDULES {
@@ -98,6 +132,26 @@ erDiagram
 - **Restrições:**
   - Um professor pode ter múltiplas listas
   - Cada lista pertence a apenas um professor
+
+### 5. TEACHERS ↔ TEACHER_ADDRESSES (1:0..1)
+- **Cardinalidade:** Um para Zero ou Um
+- **Descrição:** Um professor PODE ter um endereço cadastrado
+- **Chave Estrangeira:** `teacher_addresses.teacher_id` → `teachers.id`
+- **Restrições:**
+  - `teacher_id` é UNIQUE - apenas um endereço por professor
+  - Acesso restrito a admin (secretária/coordenação)
+  - DELETE CASCADE ao remover professor
+
+### 6. TEACHERS ↔ LESSON_TYPES (N:M via TEACHER_LESSON_TYPES)
+- **Cardinalidade:** Muitos para Muitos
+- **Descrição:** Um professor pode lecionar múltiplos tipos de aula
+- **Tabela Intermediária:** `teacher_lesson_types`
+- **Chaves Estrangeiras:**
+  - `teacher_lesson_types.teacher_id` → `teachers.id`
+  - `teacher_lesson_types.lesson_type_id` → `lesson_types.id`
+- **Restrições:**
+  - UNIQUE(teacher_id, lesson_type_id) - evita duplicatas
+  - DELETE CASCADE ao remover professor ou tipo de aula
   - DELETE CASCADE ao remover professor
 
 ---

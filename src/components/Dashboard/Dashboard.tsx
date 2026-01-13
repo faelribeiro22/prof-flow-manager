@@ -3,9 +3,10 @@ import { Header } from "@/components/Layout/Header";
 import { Sidebar } from "@/components/Layout/Sidebar";
 import { ScheduleView } from "./ScheduleView";
 import { TeachersView } from "./TeachersView";
-import { SearchView } from "./SearchView";
 import { ProfileView } from "./ProfileView";
 import { SpecialListsView } from "./SpecialListsView";
+import { TeacherAdvancedSearch } from "@/components/Teachers/TeacherAdvancedSearch";
+import { LessonTypesManagement } from "@/components/Teachers/LessonTypesManagement";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/components/Auth/AuthContext";
 
@@ -43,7 +44,9 @@ export const Dashboard = ({ user }: DashboardProps) => {
       case 'teachers':
         return user.role === 'admin' ? <TeachersView /> : null;
       case 'search':
-        return <SearchView userRole={user.role} />;
+        return <TeacherAdvancedSearch />;
+      case 'lesson-types':
+        return user.role === 'admin' ? <LessonTypesManagement /> : null;
       case 'profile':
         return <ProfileView user={user} />;
       case 'special-lists':

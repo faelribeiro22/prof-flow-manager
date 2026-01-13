@@ -38,6 +38,116 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_types: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      teacher_addresses: {
+        Row: {
+          id: string
+          teacher_id: string
+          cep: string
+          street: string
+          number: string
+          complement: string | null
+          neighborhood: string
+          city: string
+          state: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          teacher_id: string
+          cep: string
+          street: string
+          number: string
+          complement?: string | null
+          neighborhood: string
+          city: string
+          state: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          teacher_id?: string
+          cep?: string
+          street?: string
+          number?: string
+          complement?: string | null
+          neighborhood?: string
+          city?: string
+          state?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_addresses_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: true
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      teacher_lesson_types: {
+        Row: {
+          id: string
+          teacher_id: string
+          lesson_type_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          teacher_id: string
+          lesson_type_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          teacher_id?: string
+          lesson_type_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_lesson_types_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_lesson_types_lesson_type_id_fkey"
+            columns: ["lesson_type_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_types"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       schedules: {
         Row: {
           created_at: string
@@ -124,6 +234,8 @@ export type Database = {
           level: Database["public"]["Enums"]["teacher_level"]
           name: string
           phone: string | null
+          performance: Database["public"]["Enums"]["teacher_performance"] | null
+          academic_background: string | null
           updated_at: string
           user_id: string
         }
@@ -136,6 +248,8 @@ export type Database = {
           level: Database["public"]["Enums"]["teacher_level"]
           name: string
           phone?: string | null
+          performance?: Database["public"]["Enums"]["teacher_performance"] | null
+          academic_background?: string | null
           updated_at?: string
           user_id: string
         }
@@ -148,6 +262,8 @@ export type Database = {
           level?: Database["public"]["Enums"]["teacher_level"]
           name?: string
           phone?: string | null
+          performance?: Database["public"]["Enums"]["teacher_performance"] | null
+          academic_background?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -166,6 +282,7 @@ export type Database = {
     Enums: {
       schedule_status: "livre" | "com_aluno" | "indisponivel"
       teacher_level: "iniciante" | "intermediario" | "avancado" | "nativo"
+      teacher_performance: "ruim" | "regular" | "bom" | "excelente"
       user_role: "admin" | "teacher"
     }
     CompositeTypes: {
@@ -296,6 +413,7 @@ export const Constants = {
     Enums: {
       schedule_status: ["livre", "com_aluno", "indisponivel"],
       teacher_level: ["iniciante", "intermediario", "avancado", "nativo"],
+      teacher_performance: ["ruim", "regular", "bom", "excelente"],
       user_role: ["admin", "teacher"],
     },
   },

@@ -9,7 +9,8 @@ import {
   User,
   Clock,
   Menu,
-  X
+  X,
+  BookOpen
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
@@ -46,6 +47,12 @@ export const Sidebar = ({ userRole, activeTab, onTabChange, className }: Sidebar
       label: 'Buscar Horários',
       icon: Search,
       roles: ['admin', 'teacher']
+    },
+    {
+      id: 'lesson-types',
+      label: 'Tipos de Aula',
+      icon: BookOpen,
+      roles: ['admin']
     },
     {
       id: 'profile',
