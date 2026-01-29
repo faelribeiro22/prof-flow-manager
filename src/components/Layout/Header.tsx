@@ -61,7 +61,15 @@ export const Header = ({ user, onLogout }: HeaderProps) => {
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="sm" onClick={onLogout}>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => {
+                      console.log('Botão de sair clicado no Header');
+                      e.preventDefault();
+                      onLogout?.();
+                    }}
+                  >
                     <LogOut className="h-4 w-4" />
                     <span className="ml-2 hidden lg:inline">Sair</span>
                   </Button>

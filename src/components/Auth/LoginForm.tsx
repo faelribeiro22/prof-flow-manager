@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, LogIn } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { signIn } from "@/integrations/supabase/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
@@ -22,18 +23,33 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const isMountedRef = useRef(true);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
+      console.log('[LoginForm] Iniciando login...');
       const { data, error } = await signIn({
         email: credentials.email,
         password: credentials.password
       });
       
       if (error) {
+        console.error('[LoginForm] Erro no login:', error);
         toast({
           title: "Erro ao fazer login",
           description: error.message,
@@ -43,16 +59,53 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
       }
       
       if (data.user) {
+        console.log('[LoginForm] Login bem-sucedido, user:', data.user.id);
         toast({
           title: "Login realizado com sucesso",
           description: "Bem-vindo de volta!",
         });
-        onSuccess();
+        
+        // Aguarda um pouco para o AuthContext processar o onAuthStateChange
+        await new Promise(resolve => {
+          timeoutRef.current = setTimeout(resolve, 500);
+        });
+        
+        if (isMountedRef.current) {
+          console.log('[LoginForm] Chamando onSuccess após delay');
+          onSuccess();
+        }
       }
     } catch (error) {
+      console.error('[LoginForm] Exception:', error);
+      
+      // Ignora AbortError pois o login pode ter funcionado
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn('[LoginForm] AbortError no login, mas pode ter funcionado. Aguardando...');
+        
+        // Aguarda um pouco e verifica se o login funcionou
+        await new Promise(resolve => {
+          timeoutRef.current = setTimeout(resolve, 1500);
+        });
+        
+        if (!isMountedRef.current) return;
+        
+        const { data: sessionCheck } = await supabase.auth.getSession();
+        if (sessionCheck.session?.user?.email === credentials.email) {
+          console.log('[LoginForm] Login confirmado após AbortError');
+          toast({
+            title: "Login realizado com sucesso",
+            description: "Bem-vindo de volta!",
+          });
+          if (isMountedRef.current) {
+            onSuccess();
+          }
+          return;
+        }
+      }
+      
       toast({
         title: "Erro ao fazer login",
-        description: "Ocorreu um erro inesperado. Tente novamente.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro inesperado. Tente novamente.",
         variant: "destructive"
       });
     } finally {

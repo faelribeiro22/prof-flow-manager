@@ -1,5 +1,6 @@
 import { supabase } from './client';
-import { AuthError, AuthResponse, User } from '@supabase/supabase-js';
+import { AuthError, AuthResponse, User, type Session } from '@supabase/supabase-js';
+import type { TeacherLevel, TeacherPerformance, Teacher } from './extended-types';
 
 export interface SignUpData {
   email: string;
@@ -13,9 +14,20 @@ export interface SignInData {
   password: string;
 }
 
+export interface CreateTeacherAsAdminData {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  level: TeacherLevel;
+  hasInternationalCertification: boolean;
+  academicBackground?: string;
+  performance?: TeacherPerformance;
+}
+
 export interface AuthState {
   user: User | null;
-  session: any | null;
+  session: Session | null;
   loading: boolean;
 }
 
@@ -23,6 +35,8 @@ export interface AuthState {
  * Registra um novo usuário no Supabase
  */
 export const signUp = async ({ email, password, name, role }: SignUpData): Promise<AuthResponse> => {
+  console.log('[signUp] Iniciando registro:', { email, name, role });
+  
   // Registra o usuário na autenticação do Supabase com metadados
   const authResponse = await supabase.auth.signUp({
     email,
@@ -35,46 +49,151 @@ export const signUp = async ({ email, password, name, role }: SignUpData): Promi
     },
   });
 
+  console.log('[signUp] Resposta do auth:', { 
+    user: authResponse.data.user?.id, 
+    error: authResponse.error 
+  });
+
   if (authResponse.error) {
+    console.error('[signUp] Erro no registro:', authResponse.error);
     throw authResponse.error;
   }
 
   // Se o registro for bem-sucedido e tivermos um usuário
   if (authResponse.data.user) {
+    const userId = authResponse.data.user.id;
+    console.log('[signUp] Usuário criado com ID:', userId);
+    console.log('[signUp] Metadados do usuário:', authResponse.data.user.user_metadata);
+    
     // Aguarda um pouco para garantir que o trigger do banco criou o perfil
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Atualiza o perfil com o role correto (caso o trigger tenha criado com role padrão)
-    const { error: profileError } = await supabase
+    // Verifica se o perfil foi criado pelo trigger
+    const { data: existingProfile, error: checkError } = await supabase
       .from('profiles')
-      .update({ role })
-      .eq('user_id', authResponse.data.user.id);
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+    
+    console.log('[signUp] Perfil existente:', { profile: existingProfile, error: checkError });
 
-    if (profileError) {
-      console.error('Erro ao atualizar perfil:', profileError);
-      // Não lança erro aqui pois o perfil já foi criado pelo trigger
+    // Se o perfil não existe ou precisa ser atualizado
+    if (checkError || !existingProfile || existingProfile.role !== role) {
+      console.log('[signUp] Atualizando perfil com role:', role);
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ role })
+        .eq('user_id', userId);
+
+      if (profileError) {
+        console.error('[signUp] Erro ao atualizar perfil:', profileError);
+        // Não lança erro aqui pois o perfil já foi criado pelo trigger
+      } else {
+        console.log('[signUp] Perfil atualizado com sucesso');
+      }
     }
 
     // Se for um professor, cria o registro na tabela de professores
     if (role === 'teacher') {
-      const { error: teacherError } = await supabase
+      console.log('[signUp] Criando registro de professor');
+      const { data: teacherData, error: teacherError } = await supabase
         .from('teachers')
         .insert({
-          user_id: authResponse.data.user.id,
+          user_id: userId,
           name,
           email,
           level: 'iniciante', // Valor padrão
           has_international_certification: false, // Valor padrão
-        });
+        })
+        .select()
+        .single();
 
       if (teacherError) {
-        console.error('Erro ao criar professor:', teacherError);
+        console.error('[signUp] Erro ao criar professor:', teacherError);
         throw new Error(`Erro ao criar professor: ${teacherError.message}`);
       }
+      
+      console.log('[signUp] Professor criado com sucesso:', teacherData);
     }
+    
+    console.log('[signUp] Registro completo com sucesso');
   }
 
   return authResponse;
+};
+
+/**
+ * Cria um novo professor como admin:
+ * 1) Cria o usuário no Supabase Auth via signUp
+ * 2) Insere o registro em public.teachers usando permissão de admin
+ * NOTA: Usa autoConfirm: false para evitar disparo de eventos
+ */
+export const createTeacherAsAdmin = async (
+  data: CreateTeacherAsAdminData
+): Promise<{ userId: string; teacher: Teacher }> => {
+  console.log('[createTeacherAsAdmin] Iniciando criação de professor:', data.email);
+  
+  const { data: sessionData } = await supabase.auth.getSession();
+  const adminSession = sessionData.session;
+
+  if (!adminSession) {
+    throw new Error('Você precisa estar autenticado como admin para cadastrar professores');
+  }
+
+  console.log('[createTeacherAsAdmin] Admin autenticado:', adminSession.user.email);
+
+  // Cria o usuário no Auth com autoConfirm: false para evitar eventos de login
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    email: data.email,
+    password: data.password,
+    options: {
+      data: {
+        name: data.name,
+        role: 'teacher',
+      },
+      emailRedirectTo: undefined, // Evita redirect
+    },
+  });
+
+  if (signUpError) {
+    console.error('[createTeacherAsAdmin] Erro no signUp:', signUpError);
+    throw signUpError;
+  }
+
+  const userId = signUpData.user?.id;
+  if (!userId) {
+    throw new Error('Não foi possível obter o usuário criado no Auth');
+  }
+
+  console.log('[createTeacherAsAdmin] Usuário criado no Auth:', userId);
+
+  // Aguarda um pouco para o trigger criar o perfil
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // Insere o professor na tabela teachers
+  const { data: teacher, error: teacherError } = await supabase
+    .from('teachers')
+    .insert({
+      user_id: userId,
+      name: data.name,
+      email: data.email,
+      phone: data.phone || null,
+      level: data.level,
+      has_international_certification: data.hasInternationalCertification,
+      academic_background: data.academicBackground || null,
+      performance: data.performance || null,
+    })
+    .select('*')
+    .single();
+
+  if (teacherError) {
+    console.error('[createTeacherAsAdmin] Erro ao criar professor:', teacherError);
+    throw teacherError;
+  }
+
+  console.log('[createTeacherAsAdmin] Professor criado com sucesso:', teacher.id);
+  
+  return { userId, teacher };
 };
 
 /**
@@ -111,19 +230,53 @@ export const getCurrentUser = async (): Promise<User | null> => {
 
 /**
  * Obtém o papel (role) do usuário atual
+ * Busca APENAS da tabela profiles (fonte única de verdade)
+ * NOTA: Não usa user_metadata como fallback para evitar inconsistências
+ * Inclui timeout de 10 segundos para evitar loading infinito
  */
 export const getUserRole = async (userId: string): Promise<'admin' | 'teacher' | null> => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('user_id', userId)
-    .single();
+  const TIMEOUT_MS = 10000;
+  
+  const fetchRole = async (): Promise<'admin' | 'teacher' | null> => {
+    try {
+      console.log('[getUserRole] Buscando role para userId:', userId);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-  if (error || !data) {
-    return null;
-  }
+      console.log('[getUserRole] Resultado da tabela profiles:', { data, error });
 
-  return data.role;
+      if (error) {
+        console.error('[getUserRole] Erro ao buscar role:', error);
+        return null;
+      }
+
+      // Se encontrou na tabela profiles, retorna
+      if (data && data.role) {
+        console.log('[getUserRole] Role encontrada na tabela profiles:', data.role);
+        return data.role;
+      }
+      
+      console.warn('[getUserRole] Nenhum role encontrado na tabela profiles');
+      return null;
+    } catch (error) {
+      console.error('[getUserRole] Exception:', error);
+      return null;
+    }
+  };
+
+  // Executa com timeout global para evitar loading infinito
+  const timeoutPromise = new Promise<'admin' | 'teacher' | null>((resolve) => {
+    setTimeout(() => {
+      console.warn('[getUserRole] Timeout atingido ao buscar role');
+      resolve(null);
+    }, TIMEOUT_MS);
+  });
+
+  return Promise.race([fetchRole(), timeoutPromise]);
 };
 
 /**

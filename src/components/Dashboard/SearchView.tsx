@@ -67,7 +67,7 @@ export const SearchView = ({ userRole }: SearchViewProps) => {
   const handleSearch = () => {
     setIsSearching(true);
     // Simular busca
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       const filtered = mockAvailability.filter(item => {
         return (
           (!searchFilters.day || item.day === searchFilters.day) &&
@@ -79,6 +79,9 @@ export const SearchView = ({ userRole }: SearchViewProps) => {
       setResults(filtered);
       setIsSearching(false);
     }, 500);
+    
+    // Retorna cleanup (embora não seja automático aqui)
+    return () => clearTimeout(timeoutId);
   };
 
   const getStatusColor = (status: string) => {

@@ -37,9 +37,24 @@ export const RegisterForm = ({ onSuccess, onBackToLogin }: RegisterFormProps) =>
       return;
     }
     
+    if (formData.password.length < 6) {
+      toast({
+        title: "Senha muito curta",
+        description: "A senha deve ter pelo menos 6 caracteres",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
+      console.log('[RegisterForm] Iniciando cadastro:', { 
+        email: formData.email, 
+        name: formData.name, 
+        role: formData.role 
+      });
+      
       const { data, error } = await signUp({
         email: formData.email,
         password: formData.password,
@@ -47,7 +62,10 @@ export const RegisterForm = ({ onSuccess, onBackToLogin }: RegisterFormProps) =>
         role: formData.role
       });
       
+      console.log('[RegisterForm] Resultado:', { data, error });
+      
       if (error) {
+        console.error('[RegisterForm] Erro:', error);
         toast({
           title: "Erro ao criar conta",
           description: error.message,
@@ -56,13 +74,27 @@ export const RegisterForm = ({ onSuccess, onBackToLogin }: RegisterFormProps) =>
         return;
       }
       
+      const roleText = formData.role === 'admin' ? 'Administrador' : 'Professor';
+      
       toast({
-        title: "Conta criada com sucesso",
-        description: "Verifique seu email para confirmar o cadastro",
+        title: "✅ Conta criada com sucesso!",
+        description: `Usuário ${roleText} cadastrado. ${data.user?.email_confirmed_at ? 'Você já pode fazer login.' : 'Verifique seu email para confirmar o cadastro.'}`,
+      });
+      
+      console.log('[RegisterForm] Cadastro concluído com sucesso');
+      
+      // Limpa o formulário
+      setFormData({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        role: 'teacher'
       });
       
       onSuccess();
     } catch (error: any) {
+      console.error('[RegisterForm] Exception:', error);
       toast({
         title: "Erro ao criar conta",
         description: error.message || "Ocorreu um erro inesperado",

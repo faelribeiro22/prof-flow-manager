@@ -278,6 +278,37 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      search_teachers_advanced: {
+        Args: {
+          p_day_of_week?: number | null
+          p_hour?: number | null
+          p_level?: Database["public"]["Enums"]["teacher_level"] | null
+          p_has_certification?: boolean | null
+          p_performance?: Database["public"]["Enums"]["teacher_performance"] | null
+          p_lesson_type_ids?: string[] | null
+          p_academic_background?: string | null
+        }
+        Returns: Array<{
+          id: string
+          user_id: string
+          name: string
+          email: string
+          phone: string | null
+          level: Database["public"]["Enums"]["teacher_level"]
+          has_international_certification: boolean
+          performance: Database["public"]["Enums"]["teacher_performance"] | null
+          academic_background: string | null
+          free_hours_count: number
+        }>
+      }
+      get_teacher_lesson_types: {
+        Args: { teacher_id_param: string }
+        Returns: Array<{
+          id: string
+          name: string
+          description: string | null
+        }>
+      }
     }
     Enums: {
       schedule_status: "livre" | "com_aluno" | "indisponivel"

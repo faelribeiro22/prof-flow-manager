@@ -12,9 +12,23 @@
 -- Trigger para criar perfil automaticamente ao criar usuário
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  role_extraido text;
+  role_final public.user_role;
 BEGIN
+  -- Extrai o role do metadado de forma segura
+  role_extraido := NEW.raw_user_meta_data->>'role';
+  
+  -- Verifica se é um role válido, senão usa teacher como padrão
+  IF role_extraido = 'admin' THEN
+    role_final := 'admin'::public.user_role;
+  ELSE
+    role_final := 'teacher'::public.user_role;
+  END IF;
+
   INSERT INTO public.profiles (user_id, role)
-  VALUES (NEW.id, 'teacher'); -- role padrão é 'teacher'
+  VALUES (NEW.id, role_final);
+  
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

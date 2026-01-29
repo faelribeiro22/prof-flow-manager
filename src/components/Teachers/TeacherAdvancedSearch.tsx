@@ -29,6 +29,8 @@ import type {
   TeacherSearchFilters,
   TeacherSearchResult,
   LessonType,
+  TeacherLevel,
+  TeacherPerformance,
 } from '@/integrations/supabase/extended-types';
 import {
   TEACHER_LEVEL_LABELS,
@@ -184,7 +186,7 @@ export const TeacherAdvancedSearch = () => {
                 <Select
                   value={filters.level}
                   onValueChange={(value) =>
-                    setFilters({ ...filters, level: value as any })
+                    setFilters({ ...filters, level: value as TeacherLevel })
                   }
                 >
                   <SelectTrigger>
@@ -220,7 +222,7 @@ export const TeacherAdvancedSearch = () => {
               <Select
                 value={filters.performance}
                 onValueChange={(value) =>
-                  setFilters({ ...filters, performance: value as any })
+                  setFilters({ ...filters, performance: value as TeacherPerformance })
                 }
               >
                 <SelectTrigger>

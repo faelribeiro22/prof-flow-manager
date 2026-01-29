@@ -11,6 +11,7 @@ import type {
   LessonType,
   LessonTypeInsert,
   TeacherSearchFilters,
+  TeacherSearchResult,
   TeacherWithDetails,
 } from '@/integrations/supabase/extended-types';
 
@@ -231,7 +232,7 @@ export const fetchTeacherWithDetails = async (
 
 export const searchTeachersAdvanced = async (
   filters: TeacherSearchFilters
-) => {
+): Promise<TeacherSearchResult[]> => {
   const { data, error } = await supabase.rpc('search_teachers_advanced', {
     p_day_of_week: filters.dayOfWeek ?? null,
     p_hour: filters.hour ?? null,
@@ -243,7 +244,8 @@ export const searchTeachersAdvanced = async (
   });
 
   if (error) throw error;
-  return data || [];
+  if (!Array.isArray(data)) return [];
+  return data as TeacherSearchResult[];
 };
 
 // ============================================

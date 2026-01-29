@@ -1,12 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dashboard } from "@/components/Dashboard/Dashboard";
 import { LoginForm } from "@/components/Auth/LoginForm";
 import { RegisterForm } from "@/components/Auth/RegisterForm";
 import { useAuth } from "@/components/Auth/AuthContext";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Index = () => {
   const { user, role, loading } = useAuth();
-  const [showRegister, setShowRegister] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [showRegister, setShowRegister] = useState(location.pathname === "/register");
+
+  useEffect(() => {
+    setShowRegister(location.pathname === "/register");
+  }, [location.pathname]);
+
+  const handleBackToLogin = () => {
+    setShowRegister(false);
+    navigate("/");
+  };
+
+  const handleShowRegister = () => {
+    setShowRegister(true);
+    navigate("/register");
+  };
 
   if (loading) {
     return (
@@ -20,29 +37,33 @@ const Index = () => {
     if (showRegister) {
       return (
         <RegisterForm 
-          onSuccess={() => setShowRegister(false)} 
-          onBackToLogin={() => setShowRegister(false)} 
+          onSuccess={handleBackToLogin} 
+          onBackToLogin={handleBackToLogin} 
         />
       );
     }
     
     return (
       <LoginForm 
-        onSuccess={() => {}} 
+        onSuccess={() => {
+          // Força re-render após login
+          console.log('[Index] Login bem-sucedido, aguardando atualização do contexto...');
+        }} 
       />
     );
   }
 
   // Criar um objeto de usuário compatível com o Dashboard
+  // Usa o role do AuthContext (vem da tabela profiles) em vez do user_metadata
   const dashboardUser = {
     id: user.id,
-    name: user.email.split('@')[0], // Temporário até termos o nome real
+    name: user.user_metadata?.name || user.email.split('@')[0],
     email: user.email,
-    role: role || 'teacher',
+    role: role || 'teacher', // Usa role do contexto, com fallback para teacher
     phone: '',
-    level: 'Iniciante',
-    hasCertification: false
   };
+
+  console.log('[Index] Role do contexto:', role);
 
   return <Dashboard user={dashboardUser} />;
 };

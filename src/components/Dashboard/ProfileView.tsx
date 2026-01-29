@@ -35,13 +35,17 @@ export const ProfileView = ({ user }: ProfileViewProps) => {
 
   const handleSave = () => {
     // Simular salvamento
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       toast({
         title: "Perfil atualizado",
         description: "Suas informações foram salvas com sucesso.",
       });
       setIsEditing(false);
     }, 500);
+    
+    // Cleanup automático não é necessário aqui pois é um evento único de usuário
+    // mas mantemos a referência caso o componente desmonte
+    return () => clearTimeout(timeoutId);
   };
 
   const handleCancel = () => {

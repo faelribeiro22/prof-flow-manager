@@ -1,71 +1,90 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Users, Search, UserPlus, Eye } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-interface Teacher {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  level: 'Júnior' | 'Pleno' | 'Sênior';
-  hasCertification: boolean;
-  createdAt: Date;
-}
-
-// Dados mockados
-const mockTeachers: Teacher[] = [
-  {
-    id: '1',
-    name: 'Ana Silva',
-    email: 'ana.silva@escola.com',
-    phone: '(11) 99999-1111',
-    level: 'Sênior',
-    hasCertification: true,
-    createdAt: new Date('2023-01-15')
-  },
-  {
-    id: '2',
-    name: 'Carlos Santos',
-    email: 'carlos.santos@escola.com',
-    phone: '(11) 99999-2222',
-    level: 'Pleno',
-    hasCertification: false,
-    createdAt: new Date('2023-03-20')
-  },
-  {
-    id: '3',
-    name: 'Maria Oliveira',
-    email: 'maria.oliveira@escola.com',
-    phone: '(11) 99999-3333',
-    level: 'Júnior',
-    hasCertification: true,
-    createdAt: new Date('2023-06-10')
-  }
-];
+import { supabase } from "@/integrations/supabase/client";
+import { EnhancedTeacherForm } from "@/components/Teachers/EnhancedTeacherForm";
+import type { Teacher } from "@/integrations/supabase/extended-types";
+import { TEACHER_LEVEL_LABELS } from "@/integrations/supabase/extended-types";
+import { Loader2 } from "lucide-react";
 
 export const TeachersView = () => {
-  const [teachers, setTeachers] = useState<Teacher[]>(mockTeachers);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const isMobile = useIsMobile();
 
-  const filteredTeachers = teachers.filter(teacher =>
-    teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    teacher.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const loadTeachers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('teachers')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setTeachers(data || []);
+    } catch (error) {
+      console.error('Error loading teachers:', error);
+      setTeachers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTeachers();
+  }, []);
+
+  const filteredTeachers = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return teachers;
+
+    return teachers.filter((teacher) =>
+      teacher.name.toLowerCase().includes(term) ||
+      teacher.email.toLowerCase().includes(term)
+    );
+  }, [teachers, searchTerm]);
 
   const getLevelColor = (level: Teacher['level']) => {
     switch (level) {
-      case 'Júnior':
+      case 'iniciante':
         return 'bg-status-free text-status-free-foreground';
-      case 'Pleno':
+      case 'intermediario':
         return 'bg-status-occupied text-status-occupied-foreground';
-      case 'Sênior':
+      case 'avancado':
+      case 'nativo':
+      default:
         return 'bg-primary text-primary-foreground';
+    }
+  };
+
+  const handleNewTeacher = () => {
+    setSelectedTeacher(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditTeacher = (teacher: Teacher) => {
+    setSelectedTeacher(teacher);
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      setSelectedTeacher(null);
     }
   };
 
@@ -76,7 +95,7 @@ export const TeachersView = () => {
           <h1 className="text-2xl font-bold text-foreground">Professores</h1>
           <p className="text-muted-foreground">Gerencie o cadastro dos professores</p>
         </div>
-        <Button className="bg-gradient-primary w-full md:w-auto">
+        <Button className="bg-gradient-primary w-full md:w-auto" onClick={handleNewTeacher}>
           <UserPlus className="mr-2 h-4 w-4" />
           Novo Professor
         </Button>
@@ -101,6 +120,11 @@ export const TeachersView = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredTeachers.map((teacher) => (
               <Card key={teacher.id} className="transition-smooth hover:shadow-custom-md">
@@ -115,22 +139,29 @@ export const TeachersView = () => {
                     <div className="overflow-hidden">
                       <h3 className="font-semibold text-foreground truncate">{teacher.name}</h3>
                       <p className="text-sm text-muted-foreground truncate">{teacher.email}</p>
-                      <p className="text-sm text-muted-foreground truncate">{teacher.phone}</p>
+                      {teacher.phone && (
+                        <p className="text-sm text-muted-foreground truncate">{teacher.phone}</p>
+                      )}
                     </div>
                   </div>
 
                   <div className={`flex ${isMobile ? 'w-full justify-between flex-wrap' : 'items-center'} gap-2`}>
                     <Badge className={getLevelColor(teacher.level)}>
-                      {teacher.level}
+                      {TEACHER_LEVEL_LABELS[teacher.level]}
                     </Badge>
                     
-                    {teacher.hasCertification && (
+                    {teacher.has_international_certification && (
                       <Badge variant="secondary">
                         Certificado
                       </Badge>
                     )}
 
-                    <Button variant="outline" size="sm" className="flex-shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-shrink-0"
+                      onClick={() => handleEditTeacher(teacher)}
+                    >
                       <Eye className="h-4 w-4" />
                       {isMobile && <span className="ml-2">Detalhes</span>}
                     </Button>
@@ -139,8 +170,27 @@ export const TeachersView = () => {
               </Card>
             ))}
           </div>
+          )}
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedTeacher ? 'Editar Professor' : 'Novo Professor'}
+            </DialogTitle>
+          </DialogHeader>
+          <EnhancedTeacherForm
+            teacher={selectedTeacher || undefined}
+            onCancel={() => handleDialogClose(false)}
+            onSuccess={() => {
+              handleDialogClose(false);
+              loadTeachers();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
