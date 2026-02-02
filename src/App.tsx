@@ -8,7 +8,15 @@ import { AuthProvider } from "@/components/Auth/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minuto
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = ({ children }: { children?: React.ReactNode }) => (
   <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">

@@ -21,6 +21,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
     password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const isMountedRef = useRef(true);
@@ -39,6 +40,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
     setIsLoading(true);
     
     try {
@@ -140,10 +142,19 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
                   id="email"
                   type="email"
                   value={credentials.email}
-                  onChange={(e) => setCredentials(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) => {
+                    setCredentials(prev => ({ ...prev, email: e.target.value }));
+                    if (errors.email) {
+                      setErrors(prev => ({ ...prev, email: '' }));
+                    }
+                  }}
                   placeholder="seu@email.com"
+                  className={errors.email ? 'border-destructive' : ''}
                   required
                 />
+                {errors.email && (
+                  <p className="text-sm text-destructive mt-1">{errors.email}</p>
+                )}
               </div>
 
               <div>
@@ -152,10 +163,19 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
                   id="password"
                   type="password"
                   value={credentials.password}
-                  onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
+                  onChange={(e) => {
+                    setCredentials(prev => ({ ...prev, password: e.target.value }));
+                    if (errors.password) {
+                      setErrors(prev => ({ ...prev, password: '' }));
+                    }
+                  }}
                   placeholder="Sua senha"
+                  className={errors.password ? 'border-destructive' : ''}
                   required
                 />
+                {errors.password && (
+                  <p className="text-sm text-destructive mt-1">{errors.password}</p>
+                )}
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>

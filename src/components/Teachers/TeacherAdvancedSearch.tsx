@@ -36,8 +36,12 @@ import {
   TEACHER_LEVEL_LABELS,
   TEACHER_PERFORMANCE_LABELS,
 } from '@/integrations/supabase/extended-types';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, Calendar } from 'lucide-react';
 import { useAuth } from '@/components/Auth/AuthContext';
+
+interface TeacherAdvancedSearchProps {
+  onViewSchedule?: (teacherId: string, teacherName: string) => void;
+}
 
 const DAYS_OF_WEEK = [
   { value: 1, label: 'Segunda-feira' },
@@ -51,7 +55,7 @@ const DAYS_OF_WEEK = [
 
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 8); // 8-22
 
-export const TeacherAdvancedSearch = () => {
+export const TeacherAdvancedSearch = ({ onViewSchedule }: TeacherAdvancedSearchProps) => {
   const [filters, setFilters] = useState<TeacherSearchFilters>({});
   const [results, setResults] = useState<TeacherSearchResult[]>([]);
   const [lessonTypes, setLessonTypes] = useState<LessonType[]>([]);
@@ -315,12 +319,24 @@ export const TeacherAdvancedSearch = () => {
                         <p className="text-sm text-muted-foreground">{teacher.phone}</p>
                       )}
                     </div>
-                    <div className="text-right">
-                      <Badge>{TEACHER_LEVEL_LABELS[teacher.level]}</Badge>
-                      {teacher.has_international_certification && (
-                        <Badge variant="secondary" className="ml-2">
-                          Certificado
-                        </Badge>
+                    <div className="flex items-start gap-2">
+                      <div className="text-right">
+                        <Badge>{TEACHER_LEVEL_LABELS[teacher.level]}</Badge>
+                        {teacher.has_international_certification && (
+                          <Badge variant="secondary" className="ml-2">
+                            Certificado
+                          </Badge>
+                        )}
+                      </div>
+                      {isAdmin && onViewSchedule && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onViewSchedule(teacher.id, teacher.name)}
+                        >
+                          <Calendar className="h-4 w-4 mr-1" />
+                          Ver Agenda
+                        </Button>
                       )}
                     </div>
                   </div>

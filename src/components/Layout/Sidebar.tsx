@@ -10,7 +10,8 @@ import {
   Clock,
   Menu,
   X,
-  BookOpen
+  BookOpen,
+  Activity
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
@@ -32,7 +33,7 @@ export const Sidebar = ({ userRole, activeTab, onTabChange, className }: Sidebar
   const menuItems = [
     {
       id: 'schedule',
-      label: 'Minha Agenda',
+      label: userRole === 'admin' ? 'Agendas' : 'Minha Agenda',
       icon: Calendar,
       roles: ['admin', 'teacher']
     },
@@ -46,7 +47,13 @@ export const Sidebar = ({ userRole, activeTab, onTabChange, className }: Sidebar
       id: 'search',
       label: 'Buscar Horários',
       icon: Search,
-      roles: ['admin', 'teacher']
+      roles: ['admin']
+    },
+    {
+      id: 'teacher-activity',
+      label: 'Atividade',
+      icon: Activity,
+      roles: ['admin']
     },
     {
       id: 'lesson-types',

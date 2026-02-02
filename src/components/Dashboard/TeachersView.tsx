@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Users, Search, UserPlus, Eye } from "lucide-react";
+import { Users, Search, UserPlus, Eye, Calendar } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { EnhancedTeacherForm } from "@/components/Teachers/EnhancedTeacherForm";
@@ -18,7 +18,11 @@ import type { Teacher } from "@/integrations/supabase/extended-types";
 import { TEACHER_LEVEL_LABELS } from "@/integrations/supabase/extended-types";
 import { Loader2 } from "lucide-react";
 
-export const TeachersView = () => {
+interface TeachersViewProps {
+  onViewSchedule?: (teacherId: string, teacherName: string) => void;
+}
+
+export const TeachersView = ({ onViewSchedule }: TeachersViewProps) => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -144,7 +148,6 @@ export const TeachersView = () => {
                       )}
                     </div>
                   </div>
-
                   <div className={`flex ${isMobile ? 'w-full justify-between flex-wrap' : 'items-center'} gap-2`}>
                     <Badge className={getLevelColor(teacher.level)}>
                       {TEACHER_LEVEL_LABELS[teacher.level]}
@@ -156,15 +159,30 @@ export const TeachersView = () => {
                       </Badge>
                     )}
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-shrink-0"
-                      onClick={() => handleEditTeacher(teacher)}
-                    >
-                      <Eye className="h-4 w-4" />
-                      {isMobile && <span className="ml-2">Detalhes</span>}
-                    </Button>
+                    <div className="flex gap-1">
+                      {onViewSchedule && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-shrink-0"
+                          onClick={() => onViewSchedule(teacher.id, teacher.name)}
+                          title="Ver Agenda"
+                        >
+                          <Calendar className="h-4 w-4" />
+                          {isMobile && <span className="ml-2">Agenda</span>}
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-shrink-0"
+                        onClick={() => handleEditTeacher(teacher)}
+                        title="Ver Detalhes"
+                      >
+                        <Eye className="h-4 w-4" />
+                        {isMobile && <span className="ml-2">Detalhes</span>}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
