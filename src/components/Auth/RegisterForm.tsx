@@ -184,6 +184,9 @@ export const RegisterForm = ({ onSuccess, onBackToLogin }: RegisterFormProps) =>
                 <p className="text-sm text-muted-foreground">
                   Já tem uma conta? <Link to="/" className="text-primary hover:underline">Faça login</Link>
                 </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Ao criar uma conta, você concorda com nossa <Link to="/privacidade" className="text-primary hover:underline">Política de Privacidade</Link>
+                </p>
               </div>
             </form>
           </CardContent>

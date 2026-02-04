@@ -188,6 +188,9 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
               <p className="text-xs text-center text-muted-foreground mt-2">
                 Não tem uma conta? <Link to="/register" className="text-primary hover:underline">Cadastre-se</Link>
               </p>
+              <p className="text-xs text-center text-muted-foreground">
+                <Link to="/privacidade" className="text-primary hover:underline">Política de Privacidade</Link>
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -68,6 +68,12 @@ export const Sidebar = ({ userRole, activeTab, onTabChange, className }: Sidebar
       roles: ['admin', 'teacher']
     },
     {
+      id: 'privacy',
+      label: 'Privacidade',
+      icon: Shield,
+      roles: ['admin', 'teacher']
+    },
+    {
       id: 'special-lists',
       label: 'Listas Especiais',
       icon: Star,

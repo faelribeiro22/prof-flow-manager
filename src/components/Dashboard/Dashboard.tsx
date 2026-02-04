@@ -8,6 +8,7 @@ import { SpecialListsView } from "./SpecialListsView";
 import { TeacherAdvancedSearch } from "@/components/Teachers/TeacherAdvancedSearch";
 import { LessonTypesManagement } from "@/components/Teachers/LessonTypesManagement";
 import { TeacherActivityView } from "./TeacherActivityView";
+import { PrivacySettings } from "@/components/Settings/PrivacySettings";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/components/Auth/AuthContext";
 
@@ -95,6 +96,8 @@ export const Dashboard = ({ user }: DashboardProps) => {
         return user.role === 'admin' ? <LessonTypesManagement /> : null;
       case 'profile':
         return <ProfileView user={user} />;
+      case 'privacy':
+        return <PrivacySettings />;
       case 'special-lists':
         return user.role === 'admin' ? <SpecialListsView /> : null;
       case 'teacher-activity':
