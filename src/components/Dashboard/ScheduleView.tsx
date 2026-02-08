@@ -95,12 +95,17 @@ export const ScheduleView = ({ user, selectedTeacherId, selectedTeacherName, onB
   const [createForm, setCreateForm] = useState({
     teacherId: '',
     daysOfWeek: [] as string[],
-    timeSlots: [] as string[], // formato: "HH:MM"
+    timeSlots: [] as string[], // formato: "HH:MM-HH:MM" (início-fim)
     status: 'livre' as Schedule['status'],
     studentName: '',
   });
-  // Estado para entrada de horário manual
-  const [newTimeInput, setNewTimeInput] = useState({ hour: '08', minute: '00' });
+  // Estado para entrada de horário manual (início e fim)
+  const [newTimeInput, setNewTimeInput] = useState({
+    startHour: '08',
+    startMinute: '00',
+    endHour: '09',
+    endMinute: '00'
+  });
   const isMobile = useIsMobile();
 
   // Busca o teacher pelo user_id (para quando o professor acessa sua própria agenda)
@@ -167,11 +172,15 @@ export const ScheduleView = ({ user, selectedTeacherId, selectedTeacherName, onB
       const dayKey = dayOfWeekToKey(s.day_of_week);
       if (!schedule[dayKey]) schedule[dayKey] = [];
 
-      const minute = s.minute ?? 0;
+      const startMinute = s.minute ?? 0;
+      const endMinute = s.end_minute ?? 0;
+      const startTime = `${s.hour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
+      const endTime = `${s.end_hour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+      
       schedule[dayKey].push({
         id: s.id,
         scheduleId: s.id,
-        time: `${s.hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
+        time: `${startTime} - ${endTime}`,
         status: mapStatus(s.status),
         studentName: s.student_name || undefined,
         lastModified: s.updated_at ? new Date(s.updated_at) : undefined,
@@ -261,13 +270,22 @@ export const ScheduleView = ({ user, selectedTeacherId, selectedTeacherName, onB
     }));
   };
 
-  // Adiciona um horário à lista
+  // Adiciona um horário à lista (formato: início-fim)
   const handleAddTimeSlot = () => {
-    const timeLabel = `${newTimeInput.hour.padStart(2, '0')}:${newTimeInput.minute.padStart(2, '0')}`;
+    const startTime = `${newTimeInput.startHour.padStart(2, '0')}:${newTimeInput.startMinute.padStart(2, '0')}`;
+    const endTime = `${newTimeInput.endHour.padStart(2, '0')}:${newTimeInput.endMinute.padStart(2, '0')}`;
+    const timeLabel = `${startTime}-${endTime}`;
     
     // Verifica se já existe
     if (createForm.timeSlots.includes(timeLabel)) {
       return; // Já existe, não adiciona
+    }
+    
+    // Valida que o fim é depois do início
+    const startMinutes = parseInt(newTimeInput.startHour) * 60 + parseInt(newTimeInput.startMinute);
+    const endMinutes = parseInt(newTimeInput.endHour) * 60 + parseInt(newTimeInput.endMinute);
+    if (endMinutes <= startMinutes) {
+      return; // Horário de fim deve ser depois do início
     }
     
     setCreateForm(prev => ({
@@ -330,15 +348,19 @@ export const ScheduleView = ({ user, selectedTeacherId, selectedTeacherName, onB
       return;
     }
 
-    // Create all combinations of days and time slots
+    // Create all combinations of days and time slots (formato: "HH:MM-HH:MM")
     const schedulesToCreate = createForm.daysOfWeek.flatMap(day => 
       createForm.timeSlots.map(timeSlot => {
-        const [hourStr, minuteStr] = timeSlot.split(':');
+        const [startTime, endTime] = timeSlot.split('-');
+        const [startHourStr, startMinuteStr] = startTime.split(':');
+        const [endHourStr, endMinuteStr] = endTime.split(':');
         return {
           teacher_id: teacherId,
           day_of_week: dayKeyToNumber[day],
-          hour: parseInt(hourStr, 10),
-          minute: parseInt(minuteStr, 10),
+          hour: parseInt(startHourStr, 10),
+          minute: parseInt(startMinuteStr, 10),
+          end_hour: parseInt(endHourStr, 10),
+          end_minute: parseInt(endMinuteStr, 10),
           status: createForm.status,
           student_name: createForm.status === 'com_aluno' ? createForm.studentName : null,
         };
@@ -597,72 +619,120 @@ export const ScheduleView = ({ user, selectedTeacherId, selectedTeacherName, onB
               )}
             </div>
 
-            {/* Horários - entrada manual */}
+            {/* Horários - entrada manual com início e fim */}
             <div>
               <Label className="mb-2 block">Horários</Label>
               
-              {/* Campos de entrada de hora e minuto */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="flex-1">
-                  <Label htmlFor="hourInput" className="text-xs text-muted-foreground">Hora</Label>
-                  <Input
-                    id="hourInput"
-                    type="number"
-                    min="0"
-                    max="23"
-                    value={newTimeInput.hour}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      // Limita a 2 dígitos e valores entre 0-23
-                      if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 23)) {
-                        setNewTimeInput(prev => ({ ...prev, hour: value.slice(0, 2) }));
-                      }
-                    }}
-                    onBlur={(e) => {
-                      // Formata com zero à esquerda ao sair do campo
-                      const value = parseInt(e.target.value) || 0;
-                      setNewTimeInput(prev => ({ ...prev, hour: value.toString().padStart(2, '0') }));
-                    }}
-                    className="w-full"
-                    placeholder="08"
-                  />
+              {/* Campos de entrada: Início */}
+              <div className="space-y-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <Label className="text-xs text-muted-foreground font-medium">Início</Label>
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="23"
+                        value={newTimeInput.startHour}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 23)) {
+                            setNewTimeInput(prev => ({ ...prev, startHour: value.slice(0, 2) }));
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          setNewTimeInput(prev => ({ ...prev, startHour: value.toString().padStart(2, '0') }));
+                        }}
+                        className="w-16 text-center"
+                        placeholder="08"
+                      />
+                      <span className="text-lg font-medium">:</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={newTimeInput.startMinute}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 59)) {
+                            setNewTimeInput(prev => ({ ...prev, startMinute: value.slice(0, 2) }));
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          setNewTimeInput(prev => ({ ...prev, startMinute: value.toString().padStart(2, '0') }));
+                        }}
+                        className="w-16 text-center"
+                        placeholder="00"
+                      />
+                    </div>
+                  </div>
+                  
+                  <span className="text-muted-foreground mt-5">até</span>
+                  
+                  <div className="flex-1">
+                    <Label className="text-xs text-muted-foreground font-medium">Fim</Label>
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="23"
+                        value={newTimeInput.endHour}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 23)) {
+                            setNewTimeInput(prev => ({ ...prev, endHour: value.slice(0, 2) }));
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          setNewTimeInput(prev => ({ ...prev, endHour: value.toString().padStart(2, '0') }));
+                        }}
+                        className="w-16 text-center"
+                        placeholder="09"
+                      />
+                      <span className="text-lg font-medium">:</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={newTimeInput.endMinute}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 59)) {
+                            setNewTimeInput(prev => ({ ...prev, endMinute: value.slice(0, 2) }));
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          setNewTimeInput(prev => ({ ...prev, endMinute: value.toString().padStart(2, '0') }));
+                        }}
+                        className="w-16 text-center"
+                        placeholder="00"
+                      />
+                    </div>
+                  </div>
+                  
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleAddTimeSlot}
+                    className="mt-5"
+                    disabled={(() => {
+                      const startTime = `${newTimeInput.startHour.padStart(2, '0')}:${newTimeInput.startMinute.padStart(2, '0')}`;
+                      const endTime = `${newTimeInput.endHour.padStart(2, '0')}:${newTimeInput.endMinute.padStart(2, '0')}`;
+                      const timeLabel = `${startTime}-${endTime}`;
+                      const startMinutes = parseInt(newTimeInput.startHour) * 60 + parseInt(newTimeInput.startMinute);
+                      const endMinutes = parseInt(newTimeInput.endHour) * 60 + parseInt(newTimeInput.endMinute);
+                      return createForm.timeSlots.includes(timeLabel) || endMinutes <= startMinutes;
+                    })()}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Adicionar
+                  </Button>
                 </div>
-                <span className="mt-5 text-lg font-medium">:</span>
-                <div className="flex-1">
-                  <Label htmlFor="minuteInput" className="text-xs text-muted-foreground">Minuto</Label>
-                  <Input
-                    id="minuteInput"
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={newTimeInput.minute}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      // Limita a 2 dígitos e valores entre 0-59
-                      if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 59)) {
-                        setNewTimeInput(prev => ({ ...prev, minute: value.slice(0, 2) }));
-                      }
-                    }}
-                    onBlur={(e) => {
-                      // Formata com zero à esquerda ao sair do campo
-                      const value = parseInt(e.target.value) || 0;
-                      setNewTimeInput(prev => ({ ...prev, minute: value.toString().padStart(2, '0') }));
-                    }}
-                    className="w-full"
-                    placeholder="00"
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleAddTimeSlot}
-                  className="mt-5"
-                  disabled={createForm.timeSlots.includes(`${newTimeInput.hour.padStart(2, '0')}:${newTimeInput.minute.padStart(2, '0')}`)}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Adicionar
-                </Button>
               </div>
 
               {/* Lista de horários adicionados */}

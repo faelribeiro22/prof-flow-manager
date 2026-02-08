@@ -154,6 +154,8 @@ export type Database = {
           day_of_week: number
           hour: number
           minute: number
+          end_hour: number
+          end_minute: number
           id: string
           status: Database["public"]["Enums"]["schedule_status"]
           student_name: string | null
@@ -165,6 +167,8 @@ export type Database = {
           day_of_week: number
           hour: number
           minute?: number
+          end_hour: number
+          end_minute?: number
           id?: string
           status?: Database["public"]["Enums"]["schedule_status"]
           student_name?: string | null
@@ -176,6 +180,8 @@ export type Database = {
           day_of_week?: number
           hour?: number
           minute?: number
+          end_hour?: number
+          end_minute?: number
           id?: string
           status?: Database["public"]["Enums"]["schedule_status"]
           student_name?: string | null
