@@ -13,6 +13,7 @@ import {
   updateSpecialListEntry,
   deleteSpecialListEntry,
   isTeacherInList,
+  getTeacherSpecialListEntry,
 } from '@/services/special-lists.service';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -139,5 +140,26 @@ export function useIsTeacherInList(teacherId: string, listType: string) {
     queryKey: ['special_lists', 'check', teacherId, listType],
     queryFn: () => isTeacherInList(teacherId, listType),
     enabled: !!teacherId && !!listType,
+  });
+}
+
+/**
+ * Hook para buscar a entrada de lista especial restrita de um professor
+ *
+ * @param teacherId - ID do professor
+ * @returns Query com a entrada da lista restrita (ou null)
+ *
+ * @example
+ * ```tsx
+ * const { data: restriction } = useTeacherRestriction(teacherId);
+ * if (restriction) { // professor está na lista restrita }
+ * ```
+ */
+export function useTeacherRestriction(teacherId: string) {
+  return useQuery({
+    queryKey: ['special_lists', 'restriction', teacherId],
+    queryFn: () => getTeacherSpecialListEntry(teacherId, 'restricted'),
+    enabled: !!teacherId,
+    staleTime: 5 * 60 * 1000, // 5 minutos
   });
 }

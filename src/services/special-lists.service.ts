@@ -149,3 +149,29 @@ export async function isTeacherInList(
 
   return data !== null;
 }
+
+/**
+ * Busca a entrada de lista especial de um professor por tipo
+ *
+ * @param teacherId - ID do professor
+ * @param listType - Tipo da lista
+ * @returns Entrada da lista especial ou null se não encontrada
+ */
+export async function getTeacherSpecialListEntry(
+  teacherId: string,
+  listType: string
+): Promise<SpecialList | null> {
+  const { data, error } = await supabase
+    .from('special_lists')
+    .select('*')
+    .eq('teacher_id', teacherId)
+    .eq('list_type', listType)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching teacher special list entry:', error);
+    return null;
+  }
+
+  return data;
+}

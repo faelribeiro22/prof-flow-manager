@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Save, Loader2, Plus, ArrowLeft, User, Calendar, Trash2 } from "lucide-react";
+import { Clock, Save, Loader2, Plus, ArrowLeft, User, Calendar, Trash2, AlertTriangle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTeacherSchedules, useBookSchedule, useFreeSchedule, useMarkScheduleUnavailable, useCreateSchedulesBulk, useDeleteSchedule } from "@/hooks/useSchedules";
 import { useTeachers, useTeacher, useTeacherByUserId } from "@/hooks/useTeachers";
+import { useTeacherRestriction } from "@/hooks/useSpecialLists";
 import { updateLastScheduleAccess } from "@/services/teacher.service";
 import { Database } from "@/integrations/supabase/types";
 
@@ -146,6 +147,16 @@ export const ScheduleView = ({ user, selectedTeacherId, selectedTeacherName, onB
 
   // Fetch teachers list (for admin to select teacher)
   const { data: teachers } = useTeachers();
+
+  // Verifica se o professor efetivo está na lista de restrição
+  const { data: teacherRestriction } = useTeacherRestriction(effectiveTeacherId || '');
+
+  // Verifica restrição para o professor selecionado no formulário de criação (admin sem professor pré-selecionado)
+  const createFormTeacherId = user.role === 'admin' && !selectedTeacherId ? createForm.teacherId : '';
+  const { data: createFormTeacherRestriction } = useTeacherRestriction(createFormTeacherId);
+
+  // Restrição ativa: usa a do formulário de criação (quando admin seleciona professor no form) ou a do professor efetivo
+  const activeCreateRestriction = createFormTeacherId ? createFormTeacherRestriction : teacherRestriction;
 
   // Mutations
   const bookMutation = useBookSchedule();
@@ -495,6 +506,25 @@ export const ScheduleView = ({ user, selectedTeacherId, selectedTeacherName, onB
                 </Select>
               </div>
 
+              {editForm.status === 'occupied' && teacherRestriction && (
+                <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                      Este professor está na lista de restrição
+                    </p>
+                    {teacherRestriction.observation && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        Motivo: {teacherRestriction.observation}
+                      </p>
+                    )}
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                      Professores nesta lista não devem receber novos alunos.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {editForm.status === 'occupied' && (
                 <div>
                   <Label htmlFor="studentName">Nome do Aluno</Label>
@@ -800,6 +830,26 @@ export const ScheduleView = ({ user, selectedTeacherId, selectedTeacherName, onB
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Alerta de restrição do professor */}
+            {createForm.status === 'com_aluno' && activeCreateRestriction && (
+              <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    Este professor está na lista de restrição
+                  </p>
+                  {activeCreateRestriction.observation && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                      Motivo: {activeCreateRestriction.observation}
+                    </p>
+                  )}
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                    Professores nesta lista não devem receber novos alunos.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Nome do aluno (apenas se status for com_aluno) */}
             {createForm.status === 'com_aluno' && (
