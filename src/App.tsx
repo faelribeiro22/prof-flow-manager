@@ -29,7 +29,6 @@ const App = ({ children }: { children?: React.ReactNode }) => (
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Index />} />
-                  <Route path="/register" element={<Index />} />
                   <Route path="/privacidade" element={<PrivacyPolicy />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />

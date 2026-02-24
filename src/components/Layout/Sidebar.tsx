@@ -6,6 +6,7 @@ import {
   Search,
   Star,
   Shield,
+  ShieldCheck,
   User,
   Menu,
   X,
@@ -76,6 +77,12 @@ export const Sidebar = ({ userRole, activeTab, onTabChange, className }: Sidebar
       id: 'special-lists',
       label: 'Listas Especiais',
       icon: Star,
+      roles: ['admin']
+    },
+    {
+      id: 'admin-management',
+      label: 'Administradores',
+      icon: ShieldCheck,
       roles: ['admin']
     }
   ];

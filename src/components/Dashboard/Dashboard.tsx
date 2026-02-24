@@ -9,6 +9,7 @@ import { TeacherAdvancedSearch } from "@/components/Teachers/TeacherAdvancedSear
 import { LessonTypesManagement } from "@/components/Teachers/LessonTypesManagement";
 import { TeacherActivityView } from "./TeacherActivityView";
 import { PrivacySettings } from "@/components/Settings/PrivacySettings";
+import { AdminManagementView } from "./AdminManagementView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/components/Auth/AuthContext";
 
@@ -104,6 +105,8 @@ export const Dashboard = ({ user }: DashboardProps) => {
         return user.role === 'admin' ? (
           <TeacherActivityView onViewSchedule={handleViewTeacherSchedule} />
         ) : null;
+      case 'admin-management':
+        return user.role === 'admin' ? <AdminManagementView /> : null;
       default:
         return user.role === 'admin' 
           ? <ScheduleView user={user} selectedTeacherId={selectedTeacher?.id} selectedTeacherName={selectedTeacher?.name} />
