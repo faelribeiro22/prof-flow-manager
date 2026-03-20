@@ -236,6 +236,8 @@ export const searchTeachersAdvanced = async (
   const { data, error } = await supabase.rpc('search_teachers_advanced', {
     p_day_of_week: filters.dayOfWeek ?? null,
     p_hour: filters.hour ?? null,
+    p_day_of_week_list: filters.dayOfWeekList ?? null,
+    p_hour_list: filters.hourList ?? null,
     p_level: filters.level ?? null,
     p_has_certification: filters.hasCertification ?? null,
     p_performance: filters.performance ?? null,

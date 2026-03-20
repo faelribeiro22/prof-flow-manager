@@ -19,6 +19,7 @@ export interface CreateTeacherAsAdminData {
   email: string;
   password: string;
   phone?: string;
+  district?: string;
   level: TeacherLevel;
   hasInternationalCertification: boolean;
   academicBackground?: string;
@@ -178,6 +179,7 @@ export const createTeacherAsAdmin = async (
       name: data.name,
       email: data.email,
       phone: data.phone || null,
+      district: data.district || null,
       level: data.level,
       has_international_certification: data.hasInternationalCertification,
       academic_background: data.academicBackground || null,

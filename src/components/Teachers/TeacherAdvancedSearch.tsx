@@ -59,6 +59,8 @@ export const TeacherAdvancedSearch = ({ onViewSchedule }: TeacherAdvancedSearchP
   const [filters, setFilters] = useState<TeacherSearchFilters>({});
   const [results, setResults] = useState<TeacherSearchResult[]>([]);
   const [lessonTypes, setLessonTypes] = useState<LessonType[]>([]);
+  const [selectedDaysOfWeek, setSelectedDaysOfWeek] = useState<number[]>([]);
+  const [selectedHours, setSelectedHours] = useState<number[]>([]);
   const [selectedLessonTypes, setSelectedLessonTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -84,6 +86,10 @@ export const TeacherAdvancedSearch = ({ onViewSchedule }: TeacherAdvancedSearchP
     try {
       const searchFilters: TeacherSearchFilters = {
         ...filters,
+        dayOfWeekList: selectedDaysOfWeek.length > 0 ? selectedDaysOfWeek : undefined,
+        hourList: selectedHours.length > 0 ? selectedHours : undefined,
+        dayOfWeek: undefined,
+        hour: undefined,
         lessonTypeIds: selectedLessonTypes.length > 0 ? selectedLessonTypes : undefined,
       };
 
@@ -116,8 +122,22 @@ export const TeacherAdvancedSearch = ({ onViewSchedule }: TeacherAdvancedSearchP
 
   const clearFilters = () => {
     setFilters({});
+    setSelectedDaysOfWeek([]);
+    setSelectedHours([]);
     setSelectedLessonTypes([]);
     setResults([]);
+  };
+
+  const handleToggleDay = (day: number) => {
+    setSelectedDaysOfWeek((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  };
+
+  const handleToggleHour = (hour: number) => {
+    setSelectedHours((prev) =>
+      prev.includes(hour) ? prev.filter((h) => h !== hour) : [...prev, hour]
+    );
   };
 
   return (
@@ -136,47 +156,43 @@ export const TeacherAdvancedSearch = ({ onViewSchedule }: TeacherAdvancedSearchP
           {/* Availability Filters */}
           <div className="space-y-4">
             <h3 className="font-semibold">Disponibilidade</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="dayOfWeek">Dia da Semana</Label>
-                <Select
-                  value={filters.dayOfWeek?.toString()}
-                  onValueChange={(value) =>
-                    setFilters({ ...filters, dayOfWeek: parseInt(value) })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o dia" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DAYS_OF_WEEK.map((day) => (
-                      <SelectItem key={day.value} value={day.value.toString()}>
-                        {day.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Dias da Semana</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Selecione um ou mais dias
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {DAYS_OF_WEEK.map((day) => (
+                    <Badge
+                      key={day.value}
+                      variant={selectedDaysOfWeek.includes(day.value) ? 'default' : 'outline'}
+                      className="cursor-pointer"
+                      onClick={() => handleToggleDay(day.value)}
+                    >
+                      {day.label}
+                    </Badge>
+                  ))}
+                </div>
               </div>
 
               <div>
-                <Label htmlFor="hour">Horário</Label>
-                <Select
-                  value={filters.hour?.toString()}
-                  onValueChange={(value) =>
-                    setFilters({ ...filters, hour: parseInt(value) })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o horário" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {HOURS.map((hour) => (
-                      <SelectItem key={hour} value={hour.toString()}>
-                        {hour}:00
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Horários</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Selecione um ou mais horários
+                </p>
+                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1">
+                  {HOURS.map((hour) => (
+                    <Badge
+                      key={hour}
+                      variant={selectedHours.includes(hour) ? 'default' : 'outline'}
+                      className="cursor-pointer"
+                      onClick={() => handleToggleHour(hour)}
+                    >
+                      {hour}:00
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -317,6 +333,9 @@ export const TeacherAdvancedSearch = ({ onViewSchedule }: TeacherAdvancedSearchP
                       <p className="text-sm text-muted-foreground">{teacher.email}</p>
                       {teacher.phone && (
                         <p className="text-sm text-muted-foreground">{teacher.phone}</p>
+                      )}
+                      {teacher.district && (
+                        <p className="text-sm text-muted-foreground">Distrito: {teacher.district}</p>
                       )}
                     </div>
                     <div className="flex items-start gap-2">

@@ -44,6 +44,8 @@ export interface TeacherWithDetails extends Teacher {
 export interface TeacherSearchFilters {
   dayOfWeek?: number;
   hour?: number;
+  dayOfWeekList?: number[];
+  hourList?: number[];
   level?: TeacherLevel;
   hasCertification?: boolean;
   performance?: TeacherPerformance;

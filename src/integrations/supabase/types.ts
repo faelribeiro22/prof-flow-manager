@@ -236,6 +236,7 @@ export type Database = {
       teachers: {
         Row: {
           created_at: string
+          district: string | null
           email: string
           has_international_certification: boolean
           id: string
@@ -250,6 +251,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          district?: string | null
           email: string
           has_international_certification?: boolean
           id?: string
@@ -264,6 +266,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          district?: string | null
           email?: string
           has_international_certification?: boolean
           id?: string
@@ -290,7 +293,9 @@ export type Database = {
       search_teachers_advanced: {
         Args: {
           p_day_of_week?: number | null
+          p_day_of_week_list?: number[] | null
           p_hour?: number | null
+          p_hour_list?: number[] | null
           p_level?: Database["public"]["Enums"]["teacher_level"] | null
           p_has_certification?: boolean | null
           p_performance?: Database["public"]["Enums"]["teacher_performance"] | null
@@ -303,6 +308,7 @@ export type Database = {
           name: string
           email: string
           phone: string | null
+          district: string | null
           level: Database["public"]["Enums"]["teacher_level"]
           has_international_certification: boolean
           performance: Database["public"]["Enums"]["teacher_performance"] | null

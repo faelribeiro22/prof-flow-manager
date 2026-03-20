@@ -66,6 +66,7 @@ export const EnhancedTeacherForm = ({
     name: string;
     email: string;
     phone: string;
+    district: string;
     level: TeacherLevel;
     has_international_certification: boolean;
     academic_background: string;
@@ -76,6 +77,7 @@ export const EnhancedTeacherForm = ({
     name: teacher?.name || '',
     email: teacher?.email || '',
     phone: teacher?.phone || '',
+    district: teacher?.district || '',
     level: (teacher?.level || 'iniciante') as TeacherLevel,
     has_international_certification: teacher?.has_international_certification || false,
     academic_background: teacher?.academic_background || '',
@@ -186,6 +188,7 @@ export const EnhancedTeacherForm = ({
           name: formData.name,
           email: formData.email,
           phone: formData.phone || null,
+          district: formData.district || null,
           level: formData.level,
           has_international_certification: formData.has_international_certification,
           academic_background: formData.academic_background || null,
@@ -224,6 +227,7 @@ export const EnhancedTeacherForm = ({
             email: formData.email,
             password: formData.password,
             phone: formData.phone || undefined,
+            district: formData.district || undefined,
             level: formData.level,
             hasInternationalCertification: formData.has_international_certification,
             academicBackground: formData.academic_background || undefined,
@@ -398,6 +402,18 @@ export const EnhancedTeacherForm = ({
                       setFormData({ ...formData, phone: e.target.value })
                     }
                     placeholder="(11) 98765-4321"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="district">Distrito</Label>
+                  <Input
+                    id="district"
+                    value={formData.district}
+                    onChange={(e) =>
+                      setFormData({ ...formData, district: e.target.value })
+                    }
+                    placeholder="Ex: Zona Norte"
                   />
                 </div>
 
