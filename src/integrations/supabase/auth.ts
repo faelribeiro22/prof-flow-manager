@@ -337,6 +337,17 @@ export const deleteUser = async ({
 };
 
 /**
+ * Atualiza o email do usuário autenticado
+ */
+export const updateCurrentUserEmail = async (newEmail: string): Promise<void> => {
+  const { error } = await supabase.auth.updateUser({ email: newEmail });
+
+  if (error) {
+    throw error;
+  }
+};
+
+/**
  * Obtém a sessão atual do usuário
  */
 export const getCurrentSession = async () => {

@@ -1,10 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Users, Search, Loader2, Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Users, Search, Loader2, Mail, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { deleteUser } from '@/integrations/supabase/auth';
 
 interface ListedUser {
   user_id: string;
@@ -19,6 +31,41 @@ export const UsersListView = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [users, setUsers] = useState<ListedUser[]>([]);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const [userToDelete, setUserToDelete] = useState<ListedUser | null>(null);
+
+  const handleDeleteUser = useCallback(async () => {
+    if (!userToDelete) return;
+
+    setDeletingUserId(userToDelete.user_id);
+    try {
+      await deleteUser({ userId: userToDelete.user_id });
+
+      toast({
+        title: 'Sucesso',
+        description: `${userToDelete.name} foi deletado com sucesso.`,
+      });
+
+      // Remover usuário da lista
+      setUsers((prev) => prev.filter((u) => u.user_id !== userToDelete.user_id));
+      setShowDeleteConfirm(false);
+      setUserToDelete(null);
+    } catch (error) {
+      console.error('Erro ao deletar usuário:', error);
+      toast({
+        title: 'Erro ao deletar usuário',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível deletar o usuário.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingUserId(null);
+    }
+  }, [userToDelete, toast]);
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -131,9 +178,27 @@ export const UsersListView = () => {
                         {user.role === 'admin' ? 'Administrador' : 'Professor'}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Criado em {new Date(user.created_at).toLocaleDateString('pt-BR')}
-                    </p>
+                    <div className="flex items-start justify-between pt-2">
+                      <p className="text-xs text-muted-foreground">
+                        Criado em {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setUserToDelete(user);
+                          setShowDeleteConfirm(true);
+                        }}
+                        disabled={deletingUserId === user.user_id}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        {deletingUserId === user.user_id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -147,6 +212,37 @@ export const UsersListView = () => {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deletar usuario?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deletar <strong>{userToDelete?.name}</strong>? Esta acao e
+              irreversivel e todos os dados associados (agendas, listas, etc) sera deletados tambem.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingUserId === userToDelete?.user_id}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={deletingUserId === userToDelete?.user_id}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {deletingUserId === userToDelete?.user_id ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deletando...
+                </>
+              ) : (
+                'Deletar'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
