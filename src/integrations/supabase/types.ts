@@ -286,6 +286,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_user: {
+        Args: { user_id_to_delete: string }
+        Returns: undefined
+      }
       admin_reset_user_password_to_default: {
         Args: { p_user_email: string }
         Returns: undefined

@@ -39,6 +39,10 @@ export interface AdminDefaultPasswordResetData {
   email: string;
 }
 
+export interface AdminDeleteUserData {
+  userId: string;
+}
+
 export interface CreateTeacherAsAdminData {
   name: string;
   email: string;
@@ -309,6 +313,22 @@ export const resetUserPasswordToDefault = async ({
 }: AdminDefaultPasswordResetData): Promise<void> => {
   const { error } = await supabase.rpc('admin_reset_user_password_to_default', {
     p_user_email: email,
+  });
+
+  if (error) {
+    throw error;
+  }
+};
+
+/**
+ * Deleta um usuário (admin ou professor) com validações de segurança
+ * e cascata de dados relacionados
+ */
+export const deleteUser = async ({
+  userId,
+}: AdminDeleteUserData): Promise<void> => {
+  const { error } = await supabase.rpc('admin_delete_user', {
+    user_id_to_delete: userId,
   });
 
   if (error) {
