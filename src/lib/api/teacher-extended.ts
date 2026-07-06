@@ -8,6 +8,9 @@ import type {
   TeacherAddress,
   TeacherAddressInsert,
   TeacherAddressUpdate,
+  TeacherTraining,
+  TeacherTrainingInsert,
+  TeacherTrainingUpdate,
   LessonType,
   LessonTypeInsert,
   TeacherSearchFilters,
@@ -72,6 +75,61 @@ export const deleteTeacherAddress = async (teacherId: string): Promise<void> => 
     .from('teacher_addresses')
     .delete()
     .eq('teacher_id', teacherId);
+
+  if (error) throw error;
+};
+
+// ============================================
+// TEACHER TRAININGS
+// ============================================
+
+export const fetchTeacherTrainings = async (
+  teacherId: string
+): Promise<TeacherTraining[]> => {
+  const { data, error } = await supabase
+    .from('teacher_trainings')
+    .select('*')
+    .eq('teacher_id', teacherId)
+    .order('training_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+};
+
+export const createTeacherTraining = async (
+  trainingData: TeacherTrainingInsert
+): Promise<TeacherTraining> => {
+  const { data, error } = await supabase
+    .from('teacher_trainings')
+    .insert(trainingData)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const updateTeacherTraining = async (
+  id: string,
+  updates: TeacherTrainingUpdate
+): Promise<TeacherTraining> => {
+  const { data, error } = await supabase
+    .from('teacher_trainings')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const deleteTeacherTraining = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('teacher_trainings')
+    .delete()
+    .eq('id', id);
 
   if (error) throw error;
 };

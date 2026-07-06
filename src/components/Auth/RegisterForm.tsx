@@ -93,11 +93,13 @@ export const RegisterForm = ({ onSuccess, onBackToLogin }: RegisterFormProps) =>
       });
       
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[RegisterForm] Exception:', error);
       toast({
         title: "Erro ao criar conta",
-        description: error.message || "Ocorreu um erro inesperado",
+        description: error instanceof Error
+          ? error.message
+          : "Ocorreu um erro inesperado",
         variant: "destructive"
       });
     } finally {

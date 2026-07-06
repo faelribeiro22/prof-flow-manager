@@ -551,6 +551,26 @@ BEGIN
           )
         )
       )
+      OR (
+        -- Handle day-only filter (no time_ranges, no hour_list) with full day coverage
+        p_day_of_week_list IS NOT NULL
+        AND cardinality(p_day_of_week_list) > 0
+        AND (p_time_ranges IS NULL OR cardinality(p_time_ranges) = 0)
+        AND (p_hour_list IS NULL OR cardinality(p_hour_list) = 0)
+        AND NOT EXISTS (
+          SELECT 1
+          FROM (
+            SELECT DISTINCT unnest(p_day_of_week_list) AS day_of_week
+          ) AS d
+          WHERE NOT EXISTS (
+            SELECT 1
+            FROM public.schedules s_day
+            WHERE s_day.teacher_id = t.id
+              AND s_day.status::TEXT = 'livre'
+              AND s_day.day_of_week = d.day_of_week
+          )
+        )
+      )
     )
     AND (p_level IS NULL OR t.level::TEXT = p_level)
     AND (p_has_certification IS NULL OR t.has_international_certification = p_has_certification)
@@ -574,7 +594,7 @@ COMMENT ON FUNCTION public.search_teachers_advanced(
   TEXT,
   UUID[],
   TEXT
-) IS 'Busca avançada de professores com verificação de cobertura completa para intervalos de disponibilidade.';
+) IS 'Busca avançada de professores com cobertura completa para intervalos e dias selecionados.';
 
 -- ------------------------------------------------
 -- 4.5 Obter tipos de aula de um professor

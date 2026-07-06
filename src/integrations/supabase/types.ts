@@ -148,6 +148,44 @@ export type Database = {
           }
         ]
       }
+      teacher_trainings: {
+        Row: {
+          id: string
+          teacher_id: string
+          training_name: string
+          training_date: string
+          content: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          teacher_id: string
+          training_name: string
+          training_date: string
+          content: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          teacher_id?: string
+          training_name?: string
+          training_date?: string
+          content?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_trainings_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       schedules: {
         Row: {
           created_at: string

@@ -5,7 +5,7 @@
  * Fornece funções para login, logout e gerenciamento de sessão.
  */
 
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { useToast } from './use-toast';
@@ -46,6 +46,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  /**
+   * Carrega perfil do usuário do banco de dados
+   */
+  const loadProfile = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar seu perfil',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
   // Carregar sessão inicial
   useEffect(() => {
     // Verificar sessão ativa
@@ -72,32 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
-
-  /**
-   * Carrega perfil do usuário do banco de dados
-   */
-  const loadProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (error) throw error;
-      setProfile(data);
-    } catch (error) {
-      console.error('Error loading profile:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar seu perfil',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [loadProfile]);
 
   /**
    * Faz login com email e senha
@@ -122,13 +122,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: 'Sucesso',
         description: 'Login realizado com sucesso!',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
 
       let errorMessage = 'Credenciais inválidas';
-      if (error.message?.includes('Invalid login credentials')) {
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('Invalid login credentials')) {
         errorMessage = 'Email ou senha incorretos';
-      } else if (error.message?.includes('Email not confirmed')) {
+      } else if (message.includes('Email not confirmed')) {
         errorMessage = 'Email não confirmado. Verifique sua caixa de entrada.';
       }
 

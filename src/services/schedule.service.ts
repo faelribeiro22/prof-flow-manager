@@ -11,6 +11,7 @@ import { Database } from '@/integrations/supabase/types';
 type Schedule = Database['public']['Tables']['schedules']['Row'];
 type ScheduleInsert = Database['public']['Tables']['schedules']['Insert'];
 type ScheduleUpdate = Database['public']['Tables']['schedules']['Update'];
+type UpcomingSchedule = Schedule & { teacher: { name: string; email: string } };
 
 const toMinutes = (hour: number, minute = 0): number => hour * 60 + minute;
 
@@ -339,9 +340,7 @@ export async function createSchedulesBulk(schedules: ScheduleInsert[]): Promise<
  *
  * @returns Lista de horários com aula nas próximas 24h
  */
-export async function getUpcomingSchedules(): Promise<
-  (Schedule & { teacher: { name: string; email: string } })[]
-> {
+export async function getUpcomingSchedules(): Promise<UpcomingSchedule[]> {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const dayOfWeek = tomorrow.getDay();
@@ -358,5 +357,5 @@ export async function getUpcomingSchedules(): Promise<
     throw new Error('Erro ao buscar próximos horários');
   }
 
-  return (data as any) || [];
+  return (data ?? []) as unknown as UpcomingSchedule[];
 }

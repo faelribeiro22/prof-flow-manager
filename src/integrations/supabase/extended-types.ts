@@ -21,6 +21,10 @@ export type TeacherLessonType = Database['public']['Tables']['teacher_lesson_typ
 export type TeacherLessonTypeInsert = Database['public']['Tables']['teacher_lesson_types']['Insert'];
 export type TeacherLessonTypeUpdate = Database['public']['Tables']['teacher_lesson_types']['Update'];
 
+export type TeacherTraining = Database['public']['Tables']['teacher_trainings']['Row'];
+export type TeacherTrainingInsert = Database['public']['Tables']['teacher_trainings']['Insert'];
+export type TeacherTrainingUpdate = Database['public']['Tables']['teacher_trainings']['Update'];
+
 export type Teacher = Database['public']['Tables']['teachers']['Row'];
 export type TeacherInsert = Database['public']['Tables']['teachers']['Insert'];
 export type TeacherUpdate = Database['public']['Tables']['teachers']['Update'];
@@ -39,6 +43,7 @@ export type TeacherLevel = Database['public']['Enums']['teacher_level'];
 export interface TeacherWithDetails extends Teacher {
   address?: TeacherAddress | null;
   lesson_types?: LessonType[];
+  trainings?: TeacherTraining[];
 }
 
 export interface TeacherSearchFilters {

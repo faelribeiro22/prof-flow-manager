@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { getCurrentSession, getUserRole, signOut as supabaseSignOut } from '@/integrations/supabase/auth';

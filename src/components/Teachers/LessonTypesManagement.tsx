@@ -3,7 +3,7 @@
 // ============================================
 // Gerenciamento de tipos de aula (Admin only)
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,11 +56,7 @@ export const LessonTypesManagement = () => {
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadLessonTypes();
-  }, []);
-
-  const loadLessonTypes = async () => {
+  const loadLessonTypes = useCallback(async () => {
     try {
       setLoading(true);
       const data = await fetchLessonTypes();
@@ -75,7 +71,11 @@ export const LessonTypesManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadLessonTypes();
+  }, [loadLessonTypes]);
 
   const handleOpenDialog = (type?: LessonType) => {
     if (type) {

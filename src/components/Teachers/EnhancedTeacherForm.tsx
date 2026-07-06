@@ -38,6 +38,7 @@ import {
   fetchTeacherAddress,
 } from '@/lib/api/teacher-extended';
 import { TeacherAddressForm } from './TeacherAddressForm';
+import { TeacherTrainingsForm } from './TeacherTrainingsForm';
 import type {
   Teacher,
   LessonType,
@@ -49,7 +50,7 @@ import {
   TEACHER_LEVEL_LABELS,
   TEACHER_PERFORMANCE_LABELS,
 } from '@/integrations/supabase/extended-types';
-import { Loader2, GraduationCap, MapPin, BookOpen, Award } from 'lucide-react';
+import { Loader2, GraduationCap, MapPin, BookOpen, Award, BookOpenCheck } from 'lucide-react';
 
 interface EnhancedTeacherFormProps {
   teacher?: Teacher;
@@ -107,6 +108,7 @@ export const EnhancedTeacherForm = ({
 
   const isAdmin = role === 'admin';
   const isEditMode = !!teacher;
+  const tabCount = isEditMode ? (isAdmin ? 5 : 4) : 3;
 
   const loadInitialData = useCallback(async () => {
     try {
@@ -356,23 +358,27 @@ export const EnhancedTeacherForm = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList
-          className={`grid w-full ${isAdmin && isEditMode ? 'grid-cols-4' : 'grid-cols-3'}`}
-        >
-          <TabsTrigger value="basic">
+        <TabsList className="flex h-auto w-full justify-start overflow-x-auto">
+          <TabsTrigger value="basic" className={`min-w-max flex-1 ${tabCount >= 5 ? 'lg:flex-none' : ''}`}>
             <Award className="h-4 w-4 mr-2" />
             Dados Básicos
           </TabsTrigger>
-          <TabsTrigger value="academic">
+          <TabsTrigger value="academic" className={`min-w-max flex-1 ${tabCount >= 5 ? 'lg:flex-none' : ''}`}>
             <GraduationCap className="h-4 w-4 mr-2" />
             Formação
           </TabsTrigger>
-          <TabsTrigger value="lessons">
+          <TabsTrigger value="lessons" className={`min-w-max flex-1 ${tabCount >= 5 ? 'lg:flex-none' : ''}`}>
             <BookOpen className="h-4 w-4 mr-2" />
             Tipos de Aula
           </TabsTrigger>
+          {isEditMode && (
+            <TabsTrigger value="trainings" className={`min-w-max flex-1 ${tabCount >= 5 ? 'lg:flex-none' : ''}`}>
+              <BookOpenCheck className="h-4 w-4 mr-2" />
+              Treinamentos
+            </TabsTrigger>
+          )}
           {isAdmin && isEditMode && (
-            <TabsTrigger value="address">
+            <TabsTrigger value="address" className={`min-w-max flex-1 ${tabCount >= 5 ? 'lg:flex-none' : ''}`}>
               <MapPin className="h-4 w-4 mr-2" />
               Endereço
             </TabsTrigger>
@@ -624,6 +630,13 @@ export const EnhancedTeacherForm = ({
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Trainings (Edit Mode) */}
+        {isEditMode && teacher && (
+          <TabsContent value="trainings">
+            <TeacherTrainingsForm teacherId={teacher.id} canManage={isAdmin} />
+          </TabsContent>
+        )}
 
         {/* Address (Admin Only - Edit Mode) */}
         {isAdmin && isEditMode && teacher && (
